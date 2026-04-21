@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mission Control — Tarjetas de Crédito</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #0a0c10;
+      --bg-panel: #0f1318;
+      --bg-card: #141920;
+      --bg-elevated: #1a2030;
+      --border: #1e2a38;
+      --border-bright: #2a3a50;
+      --cyan: #00d4ff;
+      --cyan-dim: #0099bb;
+      --orange: #ff6b2b;
+      --orange-dim: #cc4a15;
+      --white: #e8f0f8;
+      --white-dim: #8899aa;
+      --green: #00ff88;
+      --yellow: #ffcc00;
+      --red: #ff3355;
+      --green-dim: #00aa55;
+      --yellow-dim: #cc9900;
+      --red-dim: #aa1133;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'Exo 2', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--white);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    #root { min-height: 100vh; }
+
+    .mc-app {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,212,255,0.07) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,212,255,0.03) 39px, rgba(0,212,255,0.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,212,255,0.03) 39px, rgba(0,212,255,0.03) 40px),
+        var(--bg-base);
+      padding: 0 0 40px 0;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    .mc-header {
+      border-bottom: 1px solid var(--border-bright);
+      background: linear-gradient(180deg, rgba(0,212,255,0.04) 0%, transparent 100%);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .mc-header-left { display: flex; align-items: center; gap: 14px; }
+
+    .mc-logo {
+      width: 36px; height: 36px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .mc-logo::before {
+      content: '';
+      width: 10px; height: 10px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--cyan);
+    }
+    .mc-logo::after {
+      content: '';
+      position: absolute;
+      width: 24px; height: 24px;
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 50%;
+      animation: spin 8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .mc-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      line-height: 1.3;
+    }
+    .mc-subtitle {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--white-dim);
+      letter-spacing: 2px;
+    }
+    .mc-header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+    .mc-stat-pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--border-bright);
+      background: var(--bg-card);
+      color: var(--white-dim);
+      letter-spacing: 1px;
+    }
+    .mc-stat-pill span { color: var(--cyan); font-size: 13px; }
+
+    .mc-status-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ── LAYOUT ─────────────────────────────────── */
+    .mc-layout {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .mc-layout { grid-template-columns: 1fr; }
+      .mc-header { flex-wrap: wrap; gap: 10px; }
+      .mc-stat-pill { font-size: 10px; }
+    }
+
+    /* ── SECTION LABEL ───────────────────────────── */
+    .mc-section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--white-dim);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mc-section-label::before { content:''; width:20px; height:1px; background:var(--cyan); }
+    .mc-section-label::after  { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── CARDS GRID ──────────────────────────────── */
+    .mc-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* ── CARD ────────────────────────────────────── */
+    .mc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .mc-card:hover { border-color: var(--border-bright); }
+    .mc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    .mc-card.status-green::before { background:var(--green); box-shadow:0 0 8px var(--green); }
+    .mc-card.status-yellow::before { background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+    .mc-card.status-red::before { background:var(--red); box-shadow:0 0 8px var(--red); }
+
+    .mc-card-header {
+      padding: 14px 16px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+    }
+    .mc-card-name { font-family:var(--sans); font-weight:700; font-size:15px; color:var(--white); letter-spacing:0.5px; }
+    .mc-card-network { font-family:var(--mono); font-size:9px; color:var(--white-dim); letter-spacing:2px; margin-top:2px; }
+    .mc-card-pct { font-family:var(--mono); font-size:22px; font-weight:700; line-height:1; }
+    .mc-card-pct.green { color:var(--green); text-shadow:0 0 12px var(--green); }
+    .mc-card-pct.yellow { color:var(--yellow); text-shadow:0 0 12px var(--yellow); }
+    .mc-card-pct.red { color:var(--red); text-shadow:0 0 12px var(--red); animation:blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity:0.5; } }
+
+    .mc-card-body { padding: 12px 16px; }
+
+    /* Progress bar */
+    .mc-bar-wrap {
+      position: relative;
+      height: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      overflow: visible;
+      margin-bottom: 10px;
+    }
+    .mc-bar-fill {
+      height: 100%;
+      transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .mc-bar-fill.green { background:linear-gradient(90deg,var(--green-dim),var(--green)); box-shadow:0 0 10px rgba(0,255,136,0.4); }
+    .mc-bar-fill.yellow { background:linear-gradient(90deg,var(--yellow-dim),var(--yellow)); box-shadow:0 0 10px rgba(255,204,0,0.4); }
+    .mc-bar-fill.red { background:linear-gradient(90deg,var(--red-dim),var(--red)); box-shadow:0 0 10px rgba(255,51,85,0.4); }
+
+    .mc-bar-marker {
+      position: absolute;
+      top: -4px; bottom: -4px;
+      width: 2px;
+      background: var(--cyan);
+      box-shadow: 0 0 6px var(--cyan);
+      z-index: 2;
+      left: 20%;
+    }
+    .mc-bar-marker::after {
+      content: '20%';
+      position: absolute;
+      top: -16px; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--cyan);
+      white-space: nowrap;
+    }
+
+    /* Amounts */
+    .mc-amounts { display:flex; justify-content:space-between; margin-bottom:10px; }
+    .mc-amount-item label { font-family:var(--mono); font-size:9px; color:var(--white-dim); letter-spacing:1.5px; display:block; margin-bottom:2px; }
+    .mc-amount-item .val { font-family:var(--mono); font-size:13px; color:var(--white); }
+    .mc-amount-item .val.used { color:var(--orange); }
+
+    /* Dates */
+    .mc-dates { border-top:1px solid var(--border); padding-top:10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .mc-date-item label { font-family:var(--mono); font-size:9px; color:var(--white-dim); letter-spacing:1px; display:block; margin-bottom:2px; }
+    .mc-date-item .val { font-family:var(--mono); font-size:11px; color:var(--cyan); }
+    .mc-date-item .val.ideal { color:var(--green); }
+
+    /* Card actions */
+    .mc-card-actions {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: rgba(0,0,0,0.2);
+    }
+
+    /* ── BUTTONS ─────────────────────────────────── */
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      flex: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform:translateY(1px); box-shadow:none !important; }
+    .btn-cyan  { color:var(--cyan);   border-color:var(--cyan-dim); }
+    .btn-cyan:hover  { background:rgba(0,212,255,0.1); border-color:var(--cyan);   box-shadow:0 0 14px rgba(0,212,255,0.2); }
+    .btn-orange{ color:var(--orange); border-color:var(--orange-dim); }
+    .btn-orange:hover{ background:rgba(255,107,43,0.1);  border-color:var(--orange); box-shadow:0 0 14px rgba(255,107,43,0.2); }
+    .btn-green { color:var(--green);  border-color:var(--green-dim); }
+    .btn-green:hover { background:rgba(0,255,136,0.1);  border-color:var(--green);  box-shadow:0 0 14px rgba(0,255,136,0.2); }
+    .btn-red   { color:var(--red);    border-color:var(--red-dim); }
+    .btn-red:hover   { background:rgba(255,51,85,0.1);   border-color:var(--red);    box-shadow:0 0 14px rgba(255,51,85,0.2); }
+    .btn-full  { width:100%; flex:unset; }
+
+    /* ── EMPTY STATE ─────────────────────────────── */
+    .mc-empty { grid-column:1/-1; text-align:center; padding:60px 20px; border:1px dashed var(--border-bright); color:var(--white-dim); font-family:var(--mono); font-size:12px; letter-spacing:2px; }
+    .mc-empty-icon { font-size:36px; margin-bottom:12px; opacity:0.3; }
+
+    /* ── SIDEBAR ─────────────────────────────────── */
+    .mc-sidebar { display:flex; flex-direction:column; gap:16px; }
+
+    /* ── PANEL ───────────────────────────────────── */
+    .mc-panel { background:var(--bg-card); border:1px solid var(--border); }
+    .mc-panel-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,212,255,0.03);
+    }
+    .mc-panel-title { font-family:var(--mono); font-size:10px; letter-spacing:2.5px; color:var(--cyan); text-transform:uppercase; flex:1; }
+    .mc-panel-icon  { font-size:14px; opacity:0.8; }
+    .mc-panel-body  { padding:16px; }
+
+    /* ── FORM ────────────────────────────────────── */
+    .mc-form-group { margin-bottom:12px; }
+    .mc-label { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--white-dim); text-transform:uppercase; display:block; margin-bottom:5px; }
+    .mc-input, .mc-select {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-bright);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 9px 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      border-radius: 0;
+      -webkit-appearance: none;
+    }
+    .mc-input:focus, .mc-select:focus { border-color:var(--cyan); box-shadow:0 0 10px rgba(0,212,255,0.15); }
+    .mc-select option { background:var(--bg-card); }
+    .mc-input::placeholder { color:var(--white-dim); opacity:0.5; }
+    .mc-form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+    /* ── SUMMARY ─────────────────────────────────── */
+    .mc-summary-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:12px; }
+    .mc-summary-row:last-child { border-bottom:none; }
+    .mc-summary-label { color:var(--white-dim); font-size:10px; letter-spacing:1px; }
+    .mc-summary-val   { color:var(--white); }
+    .mc-summary-val.cyan   { color:var(--cyan); }
+    .mc-summary-val.orange { color:var(--orange); }
+    .mc-summary-val.green  { color:var(--green); }
+
+    /* ── MODAL ───────────────────────────────────── */
+    .mc-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .mc-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--green);
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 40px rgba(0,255,136,0.15);
+    }
+    .mc-modal-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,255,136,0.04);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--green);
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .mc-modal-body { padding: 20px; font-size: 13px; color: var(--white); line-height: 1.6; }
+    .mc-modal-body strong { color: var(--cyan); }
+    .mc-modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+    /* ── EXPENSE LIST ────────────────────────────── */
+    .mc-expense-list { margin-top: 12px; }
+    .mc-expense-item { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:11px; }
+    .mc-expense-item:last-child { border-bottom:none; }
+    .mc-expense-card   { color:var(--white-dim); font-size:10px; }
+    .mc-expense-amount { color:var(--orange); }
+    .mc-expense-date   { color:var(--white-dim); font-size:10px; }
+    .mc-no-expenses    { font-family:var(--mono); font-size:11px; color:var(--white-dim); text-align:center; padding:16px; opacity:0.5; }
+
+    /* ── SMART SUGGESTION ────────────────────────── */
+    .mc-suggestion-box { margin-top:14px; border:1px solid var(--border-bright); background:var(--bg-base); overflow:hidden; transition:border-color 0.3s; }
+    .mc-suggestion-box.suggest-safe   { border-color:var(--green-dim); }
+    .mc-suggestion-box.suggest-warn   { border-color:var(--yellow-dim); }
+    .mc-suggestion-box.suggest-danger { border-color:var(--red-dim); }
+
+    .mc-suggest-header { padding:6px 10px; font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--white-dim); background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); text-transform:uppercase; }
+    .mc-suggest-body   { padding:10px; }
+    .mc-suggest-card-name { font-family:var(--sans); font-weight:700; font-size:14px; margin-bottom:4px; }
+    .mc-suggest-card-name.safe   { color:var(--green);  text-shadow:0 0 8px rgba(0,255,136,0.4); }
+    .mc-suggest-card-name.warn   { color:var(--yellow); text-shadow:0 0 8px rgba(255,204,0,0.4); }
+    .mc-suggest-card-name.danger { color:var(--red); }
+
+    .mc-suggest-detail { font-family:var(--mono); font-size:10px; color:var(--white-dim); line-height:1.7; }
+    .mc-suggest-detail strong { color:var(--white); }
+    .mc-suggest-warn-msg { font-family:var(--mono); font-size:10px; color:var(--red); padding:8px; border:1px solid var(--red-dim); background:rgba(255,51,85,0.05); letter-spacing:1px; line-height:1.5; }
+    .mc-suggest-mini-bar { height:4px; background:rgba(255,255,255,0.05); margin-top:8px; position:relative; }
+    .mc-suggest-mini-fill { height:100%; transition:width 0.4s ease; }
+    .mc-suggest-mini-marker { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--cyan); left:20%; }
+    .mc-suggest-no-cards { font-family:var(--mono); font-size:10px; color:var(--white-dim); text-align:center; padding:12px; opacity:0.5; }
+
+    /* ── SCROLLBAR ───────────────────────────────── */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background:var(--border-bright); }
+    ::-webkit-scrollbar-thumb:hover { background:var(--cyan-dim); }
+
+    /* ── TOAST ───────────────────────────────────── */
+    .mc-toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--cyan);
+      padding: 10px 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+      z-index: 2000;
+      box-shadow: 0 0 20px rgba(0,212,255,0.2);
+      animation: slideIn 0.3s ease, fadeOut 0.3s 2.7s forwards;
+    }
+    @keyframes slideIn { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    @keyframes fadeOut { to { opacity:0; transform:translateY(-4px); } }
+
+    /* ── STORAGE BADGE ───────────────────────────── */
+    .mc-saved-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--green-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .mc-saved-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--green-dim);
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Babel (standalone, no bundler needed) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    /* ── STORAGE KEYS ── */
+    const LS_CARDS    = 'mc_cards_v1';
+    const LS_EXPENSES = 'mc_expenses_v1';
+
+    /* ── DEFAULT DATA (first load only) ── */
+    const DEFAULT_CARDS = [
+      { id: 1, name: "BBVA Azul",     limit: 15000, cutDate: "2025-05-15", payDate: "2025-05-25", spent: 1800 },
+      { id: 2, name: "Mercado Pago",  limit: 8000,  cutDate: "2025-05-10", payDate: "2025-05-20", spent: 3200 },
+      { id: 3, name: "Nu",            limit: 12000, cutDate: "2025-05-18", payDate: "2025-05-28", spent: 4100 },
+    ];
+
+    /* ── HELPERS ── */
+    const load = (key, fallback) => {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch { return fallback; }
+    };
+
+    const save = (key, value) => {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    };
+
+    const fmt = (n) =>
+      '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const fmtDate = (d) =>
+      d ? new Date(d + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '—';
+
+    const addDays = (dateStr, days) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T12:00:00');
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    };
+
+    const addOneMonth = (dateStr) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDate();
+      d.setMonth(d.getMonth() + 1);
+      if (d.getDate() !== day) d.setDate(0); // fix month overflow
+      return d.toISOString().split('T')[0];
+    };
+
+    const getStatus = (pct) => pct <= 20 ? 'green' : pct <= 30 ? 'yellow' : 'red';
+
+    /* ── SUGGESTION BOX COMPONENT ── */
+    function SuggestionBox({ suggestion }) {
+      const { type, card, newPct, currentPct } = suggestion;
+      const colorClass = type === 'safe' ? 'safe' : type === 'warn' ? 'warn' : 'danger';
+      const boxClass   = type === 'safe' ? 'suggest-safe' : type === 'warn' ? 'suggest-warn' : 'suggest-danger';
+      const barColor   = type === 'safe' ? 'var(--green)' : type === 'warn' ? 'var(--yellow)' : 'var(--red)';
+      const headerText = type === 'safe'
+        ? '✓ OPCIÓN ÓPTIMA — DENTRO DEL LÍMITE SALUDABLE'
+        : type === 'warn'
+        ? '⚠ ADVERTENCIA — TODAS SUPERARÁN EL 20%'
+        : '✕ PELIGRO — TODAS SUPERARÁN SU LÍMITE DE CRÉDITO';
+
+      return (
+        <div className={`mc-suggestion-box ${boxClass}`}>
+          <div className="mc-suggest-header">{headerText}</div>
+          <div className="mc-suggest-body">
+            {type === 'danger' && (
+              <div className="mc-suggest-warn-msg">
+                ▶ ADVERTENCIA: TODAS LAS OPCIONES<br />SUPERARÁN TU LÍMITE SALUDABLE<br />
+                <span style={{ color: 'var(--white-dim)' }}>Mejor opción disponible:</span>
+              </div>
+            )}
+            <div className={`mc-suggest-card-name ${colorClass}`} style={{ marginTop: type === 'danger' ? 8 : 0 }}>
+              {card.name}
+            </div>
+            <div className="mc-suggest-detail">
+              <strong>Uso actual:</strong> {currentPct.toFixed(1)}%{'  →  '}
+              <strong>Tras el gasto:</strong> {newPct.toFixed(1)}%<br />
+              <strong>Disponible:</strong> {fmt(card.limit - card.spent)}{'  ·  '}
+              <strong>Línea:</strong> {fmt(card.limit)}
+            </div>
+            <div className="mc-suggest-mini-bar">
+              <div className="mc-suggest-mini-fill"
+                style={{ width: `${Math.min(newPct, 100)}%`, background: barColor, boxShadow: `0 0 6px ${barColor}` }} />
+              <div className="mc-suggest-mini-marker" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── MAIN APP ── */
+    function App() {
+      const [cards,    setCards]    = useState(() => load(LS_CARDS, DEFAULT_CARDS));
+      const [expenses, setExpenses] = useState(() => load(LS_EXPENSES, []));
+      const [toast,    setToast]    = useState(null);
+      const [lastSaved, setLastSaved] = useState(null);
+
+      const [cardForm,     setCardForm]     = useState({ name: '', limit: '', cutDate: '', payDate: '' });
+      const [expForm,      setExpForm]      = useState({ cardId: '', amount: '' });
+      const [smartAmount,  setSmartAmount]  = useState('');
+      const [confirm,      setConfirm]      = useState(null);
+
+      /* ── PERSIST ON CHANGE ── */
+      useEffect(() => {
+        save(LS_CARDS, cards);
+        setLastSaved(new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }, [cards]);
+
+      useEffect(() => {
+        save(LS_EXPENSES, expenses);
+      }, [expenses]);
+
+      /* ── TOAST ── */
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      /* ── ADD CARD ── */
+      const handleAddCard = useCallback(() => {
+        const { name, limit, cutDate, payDate } = cardForm;
+        if (!name.trim() || !limit || !cutDate || !payDate) return;
+        setCards(c => [...c, {
+          id: Date.now(),
+          name: name.trim(),
+          limit: parseFloat(limit),
+          cutDate,
+          payDate,
+          spent: 0,
+        }]);
+        setCardForm({ name: '', limit: '', cutDate: '', payDate: '' });
+        showToast('TARJETA AÑADIDA · GUARDADA');
+      }, [cardForm]);
+
+      /* ── ADD EXPENSE ── */
+      const handleAddExpense = useCallback(() => {
+        const { cardId, amount } = expForm;
+        if (!cardId || !amount || parseFloat(amount) <= 0) return;
+        const amt = parseFloat(amount);
+        setCards(c => c.map(card =>
+          card.id === parseInt(cardId) ? { ...card, spent: card.spent + amt } : card
+        ));
+        setExpenses(e => [
+          { id: Date.now(), cardId: parseInt(cardId), amount: amt, date: new Date().toLocaleDateString('es-MX') },
+          ...e.slice(0, 19)
+        ]);
+        setExpForm(f => ({ ...f, amount: '' }));
+        showToast(`+${fmt(amt)} REGISTRADO · GUARDADO`);
+      }, [expForm]);
+
+      /* ── OPEN PAID MODAL ── */
+      const openPaidModal = (card) => {
+        setConfirm({
+          cardId:     card.id,
+          cardName:   card.name,
+          newCutDate: addOneMonth(card.cutDate),
+          newPayDate: addOneMonth(card.payDate),
+          error:      '',
+        });
+      };
+
+      /* ── CONFIRM PAID ── */
+      const handlePaid = useCallback(() => {
+        if (!confirm) return;
+        if (!confirm.newCutDate || !confirm.newPayDate) {
+          setConfirm(c => ({ ...c, error: 'Debes ingresar ambas fechas para continuar.' }));
+          return;
+        }
+        setCards(c => c.map(card =>
+          card.id === confirm.cardId
+            ? { ...card, spent: 0, cutDate: confirm.newCutDate, payDate: confirm.newPayDate }
+            : card
+        ));
+        setConfirm(null);
+        showToast('CICLO CERRADO · FECHAS ACTUALIZADAS ✓');
+      }, [confirm]);
+
+      /* ── DELETE CARD ── */
+      const handleDeleteCard = useCallback((cardId) => {
+        setCards(c => c.filter(card => card.id !== cardId));
+        showToast('TARJETA ELIMINADA');
+      }, []);
+
+      /* ── TOTALS ── */
+      const totalLimit = cards.reduce((a, c) => a + c.limit, 0);
+      const totalSpent = cards.reduce((a, c) => a + c.spent, 0);
+      const totalPct   = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+
+      /* ── SMART SUGGESTION ── */
+      let smartSuggestion = null;
+      const _amt = parseFloat(smartAmount);
+      if (_amt > 0 && cards.length > 0) {
+        const analyzed = cards.map(card => {
+          const newSpent    = card.spent + _amt;
+          const newPct      = (newSpent / card.limit) * 100;
+          const currentPct  = (card.spent / card.limit) * 100;
+          const availablePct = 100 - currentPct;
+          return { card, newPct, currentPct, availablePct, newSpent, safe: newPct <= 20 };
+        });
+        const safe = analyzed.filter(a => a.safe);
+        if (safe.length > 0) {
+          const best = safe.reduce((a, b) => a.availablePct > b.availablePct ? a : b);
+          smartSuggestion = { type: 'safe', ...best };
+        } else {
+          const allExceed = analyzed.every(a => a.newSpent > a.card.limit);
+          const best = analyzed.reduce((a, b) => a.availablePct > b.availablePct ? a : b);
+          smartSuggestion = { type: allExceed ? 'danger' : 'warn', ...best };
+        }
+      }
+
+      /* ── RENDER ── */
+      return (
+        <div className="mc-app">
+
+          {/* HEADER */}
+          <header className="mc-header">
+            <div className="mc-header-left">
+              <div className="mc-logo" />
+              <div>
+                <div className="mc-title">MISSION CONTROL</div>
+                <div className="mc-subtitle">CREDIT MANAGEMENT SYSTEM · v3.0</div>
+              </div>
+            </div>
+            <div className="mc-header-right">
+              <div className="mc-stat-pill">TARJETAS <span>{cards.length}</span></div>
+              <div className="mc-stat-pill">
+                USO GLOBAL <span style={{ color: getStatus(totalPct) === 'green' ? 'var(--green)' : getStatus(totalPct) === 'yellow' ? 'var(--yellow)' : 'var(--red)' }}>
+                  {totalPct.toFixed(1)}%
+                </span>
+              </div>
+              {lastSaved && (
+                <div className="mc-saved-badge">GUARDADO {lastSaved}</div>
+              )}
+              <div className="mc-status-dot" />
+            </div>
+          </header>
+
+          {/* MAIN LAYOUT */}
+          <div className="mc-layout">
+
+            {/* ── LEFT: CARDS ── */}
+            <main>
+              <div className="mc-section-label">Tarjetas Activas</div>
+              <div className="mc-cards-grid">
+                {cards.length === 0 ? (
+                  <div className="mc-empty">
+                    <div className="mc-empty-icon">⬡</div>
+                    <div>NO HAY TARJETAS REGISTRADAS</div>
+                    <div style={{ marginTop: 6, opacity: 0.5 }}>Usa el panel derecho para añadir una</div>
+                  </div>
+                ) : cards.map(card => {
+                  const pct      = Math.min((card.spent / card.limit) * 100, 100);
+                  const status   = getStatus(pct);
+                  const idealDate = addDays(card.payDate, -3);
+                  return (
+                    <div key={card.id} className={`mc-card status-${status}`}>
+                      <div className="mc-card-header">
+                        <div>
+                          <div className="mc-card-name">{card.name}</div>
+                          <div className="mc-card-network">TARJETA DE CRÉDITO</div>
+                        </div>
+                        <div className={`mc-card-pct ${status}`}>{pct.toFixed(1)}%</div>
+                      </div>
+
+                      <div className="mc-card-body">
+                        <div className="mc-bar-wrap">
+                          <div className={`mc-bar-fill ${status}`} style={{ width: `${pct}%` }} />
+                          <div className="mc-bar-marker" />
+                        </div>
+
+                        <div className="mc-amounts">
+                          <div className="mc-amount-item">
+                            <label>GASTADO</label>
+                            <div className="val used">{fmt(card.spent)}</div>
+                          </div>
+                          <div className="mc-amount-item">
+                            <label>DISPONIBLE</label>
+                            <div className="val">{fmt(card.limit - card.spent)}</div>
+                          </div>
+                          <div className="mc-amount-item">
+                            <label>LÍMITE</label>
+                            <div className="val">{fmt(card.limit)}</div>
+                          </div>
+                        </div>
+
+                        <div className="mc-dates">
+                          <div className="mc-date-item">
+                            <label>CORTE</label>
+                            <div className="val">{fmtDate(card.cutDate)}</div>
+                          </div>
+                          <div className="mc-date-item">
+                            <label>LÍMITE</label>
+                            <div className="val">{fmtDate(card.payDate)}</div>
+                          </div>
+                          <div className="mc-date-item">
+                            <label>IDEAL ★</label>
+                            <div className="val ideal">{fmtDate(idealDate)}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mc-card-actions">
+                        <button className="btn btn-green" onClick={() => openPaidModal(card)}>✓ PAGADA</button>
+                        <button className="btn btn-red" style={{ flex: '0 0 auto', padding: '8px 12px' }} onClick={() => handleDeleteCard(card.id)}>✕</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* GLOBAL SUMMARY */}
+              {cards.length > 0 && (
+                <>
+                  <div className="mc-section-label" style={{ marginTop: 8 }}>Resumen Global</div>
+                  <div className="mc-panel">
+                    <div className="mc-panel-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))', gap: 10 }}>
+                      {[
+                        { label: 'LÍNEA TOTAL',  val: fmt(totalLimit),             cls: 'cyan'   },
+                        { label: 'USO TOTAL',    val: fmt(totalSpent),             cls: 'orange' },
+                        { label: 'DISPONIBLE',   val: fmt(totalLimit - totalSpent), cls: 'green'  },
+                        { label: 'USO GLOBAL',   val: `${totalPct.toFixed(2)}%`,   cls: getStatus(totalPct) },
+                      ].map(item => (
+                        <div key={item.label} style={{ padding: 10, border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+                          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 2, color: 'var(--white-dim)', marginBottom: 6 }}>{item.label}</div>
+                          <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color: `var(--${item.cls})`, textShadow: `0 0 10px var(--${item.cls})` }}>{item.val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </main>
+
+            {/* ── RIGHT: SIDEBAR ── */}
+            <aside className="mc-sidebar">
+
+              {/* ADD CARD */}
+              <div className="mc-panel">
+                <div className="mc-panel-header">
+                  <span className="mc-panel-icon">⬡</span>
+                  <span className="mc-panel-title">Nueva Tarjeta</span>
+                </div>
+                <div className="mc-panel-body">
+                  <div className="mc-form-group">
+                    <label className="mc-label">Nombre / Banco</label>
+                    <input className="mc-input" placeholder="ej. BBVA Azul"
+                      value={cardForm.name}
+                      onChange={e => setCardForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
+                  <div className="mc-form-group">
+                    <label className="mc-label">Línea de Crédito (MXN)</label>
+                    <input className="mc-input" type="number" placeholder="ej. 15000"
+                      value={cardForm.limit}
+                      onChange={e => setCardForm(f => ({ ...f, limit: e.target.value }))} />
+                  </div>
+                  <div className="mc-form-row">
+                    <div className="mc-form-group">
+                      <label className="mc-label">F. Corte</label>
+                      <input className="mc-input" type="date"
+                        value={cardForm.cutDate}
+                        onChange={e => setCardForm(f => ({ ...f, cutDate: e.target.value }))} />
+                    </div>
+                    <div className="mc-form-group">
+                      <label className="mc-label">F. Límite</label>
+                      <input className="mc-input" type="date"
+                        value={cardForm.payDate}
+                        onChange={e => setCardForm(f => ({ ...f, payDate: e.target.value }))} />
+                    </div>
+                  </div>
+                  <button className="btn btn-cyan btn-full" onClick={handleAddCard}>⊕ AÑADIR TARJETA</button>
+                </div>
+              </div>
+
+              {/* LOG EXPENSE */}
+              <div className="mc-panel">
+                <div className="mc-panel-header">
+                  <span className="mc-panel-icon">↯</span>
+                  <span className="mc-panel-title">Registrar Gasto</span>
+                </div>
+                <div className="mc-panel-body">
+                  <div className="mc-form-group">
+                    <label className="mc-label">Tarjeta</label>
+                    <select className="mc-select"
+                      value={expForm.cardId}
+                      onChange={e => setExpForm(f => ({ ...f, cardId: e.target.value }))}>
+                      <option value="">-- Seleccionar --</option>
+                      {cards.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="mc-form-group">
+                    <label className="mc-label">Monto (MXN)</label>
+                    <input className="mc-input" type="number" placeholder="ej. 350.00"
+                      value={expForm.amount}
+                      onChange={e => setExpForm(f => ({ ...f, amount: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && handleAddExpense()} />
+                  </div>
+                  <button className="btn btn-orange btn-full" onClick={handleAddExpense}>↯ CARGAR GASTO</button>
+
+                  {expenses.length > 0 && (
+                    <div className="mc-expense-list">
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 2, color: 'var(--white-dim)', marginBottom: 8, marginTop: 14 }}>
+                        ÚLTIMOS MOVIMIENTOS
+                      </div>
+                      {expenses.slice(0, 5).map(ex => {
+                        const card = cards.find(c => c.id === ex.cardId);
+                        return (
+                          <div key={ex.id} className="mc-expense-item">
+                            <span className="mc-expense-card">{card ? card.name : '—'}</span>
+                            <span className="mc-expense-amount">{fmt(ex.amount)}</span>
+                            <span className="mc-expense-date">{ex.date}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {expenses.length === 0 && <div className="mc-no-expenses">SIN MOVIMIENTOS</div>}
+                </div>
+              </div>
+
+              {/* SMART SUGGESTION */}
+              <div className="mc-panel">
+                <div className="mc-panel-header">
+                  <span className="mc-panel-icon">◈</span>
+                  <span className="mc-panel-title">Optimizador de Gastos</span>
+                </div>
+                <div className="mc-panel-body">
+                  <div className="mc-form-group">
+                    <label className="mc-label">Monto a realizar (MXN)</label>
+                    <input className="mc-input" type="number" placeholder="ej. 1200.00"
+                      value={smartAmount}
+                      onChange={e => setSmartAmount(e.target.value)} />
+                  </div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: 2, color: 'var(--white-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    ◆ Sugerencia de tarjeta
+                  </div>
+                  {cards.length === 0 && <div className="mc-suggest-no-cards">SIN TARJETAS REGISTRADAS</div>}
+                  {cards.length > 0 && !smartAmount && <div className="mc-suggest-no-cards">INGRESA UN MONTO PARA ANALIZAR</div>}
+                  {smartSuggestion && <SuggestionBox suggestion={smartSuggestion} />}
+                </div>
+              </div>
+
+            </aside>
+          </div>
+
+          {/* PAID MODAL */}
+          {confirm && (
+            <div className="mc-overlay" onClick={() => setConfirm(null)}>
+              <div className="mc-modal" onClick={e => e.stopPropagation()}>
+                <div className="mc-modal-header">✓ CIERRE DE CICLO — {confirm.cardName}</div>
+                <div className="mc-modal-body">
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--white-dim)', marginBottom: 14, letterSpacing: 1 }}>
+                    Ingresa las fechas del <strong>nuevo ciclo</strong>. Los gastos se resetearán a $0.00.
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <label className="mc-label">Nueva Fecha de Corte</label>
+                    <input className="mc-input" type="date"
+                      value={confirm.newCutDate}
+                      onChange={e => setConfirm(c => ({ ...c, newCutDate: e.target.value, error: '' }))} />
+                  </div>
+                  <div style={{ marginBottom: 4 }}>
+                    <label className="mc-label">Nueva Fecha Límite de Pago</label>
+                    <input className="mc-input" type="date"
+                      value={confirm.newPayDate}
+                      onChange={e => setConfirm(c => ({ ...c, newPayDate: e.target.value, error: '' }))} />
+                  </div>
+                  {confirm.newCutDate && confirm.newPayDate && (
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)', marginTop: 10, padding: '6px 10px', border: '1px solid var(--green-dim)', background: 'rgba(0,255,136,0.04)' }}>
+                      ★ FECHA IDEAL DE PAGO: {fmtDate(addDays(confirm.newPayDate, -3))}
+                    </div>
+                  )}
+                  {confirm.error && (
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--red)', marginTop: 8, padding: '6px 10px', border: '1px solid var(--red-dim)', background: 'rgba(255,51,85,0.05)' }}>
+                      ▶ {confirm.error}
+                    </div>
+                  )}
+                </div>
+                <div className="mc-modal-footer">
+                  <button className="btn btn-green" style={{ flex: 1 }} onClick={handlePaid}>✓ CONFIRMAR</button>
+                  <button className="btn btn-orange" style={{ flex: 1 }} onClick={() => setConfirm(null)}>✕ CANCELAR</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TOAST */}
+          {toast && <div className="mc-toast">{toast}</div>}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
